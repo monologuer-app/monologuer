@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carnet endophasique</title>
+<meta name="theme-color" content="#E9ECE6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#161B1F" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Monologuer">
+<meta name="application-name" content="Monologuer">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;1,7..72,400&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E9ECE6; --sheet:#F7F8F4; --ink:#1D2830; --muted:#66706A;
+  --rule:#D2D8CE; --blue:#2A43A6; --blue-soft:#DDE3F4; --danger:#9B2C2C;
+  --serif:"Literata", Georgia, "Times New Roman", serif;
+  --sans:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --line:1.9rem;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --paper:#161B1F; --sheet:#1E252A; --ink:#E4E8E2; --muted:#9AA39C;
+    --rule:#334048; --blue:#9DB0F2; --blue-soft:#26325A; --danger:#E08A8A; }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:16px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+button,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+[hidden]{display:none!important}
+
+html{-webkit-text-size-adjust:100%}
+body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.wrap{max-width:880px;margin:0 auto;
+  padding:0 max(1.25rem, env(safe-area-inset-right,0px)) 0 max(1.25rem, env(safe-area-inset-left,0px))}
+button{touch-action:manipulation}
+header.top{padding:3rem 0 1.5rem;display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-end;justify-content:space-between}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,5vw,2.9rem);line-height:1.05;margin:0;letter-spacing:-.01em}
+.brand p{margin:.6rem 0 0;color:var(--muted);max-width:36ch}
+.tabs{display:flex;border-bottom:1px solid var(--rule)}
+.tabs button{background:none;border:0;padding:.55rem 1rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--blue)}
+
+.sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:1.25rem 1.25rem 1rem}
+.modes{display:flex;gap:.4rem;margin-bottom:1rem}
+.modes button{border:1px solid var(--rule);background:transparent;padding:.4rem .9rem;border-radius:999px;cursor:pointer}
+.modes button[aria-checked="true"]{background:var(--blue);border-color:var(--blue);color:var(--sheet)}
+
+.lined{width:100%;min-height:calc(var(--line) * 9);resize:vertical;border:0;background-color:transparent;
+  background-image:linear-gradient(to bottom, transparent calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px));
+  background-size:100% var(--line);background-attachment:local;
+  font-family:var(--serif);font-size:1.12rem;line-height:var(--line);color:var(--blue);padding:0 .25rem;outline:none}
+.lined::placeholder{color:var(--muted);font-style:italic}
+.lined:focus-visible{outline:none;box-shadow:0 0 0 2px var(--blue-soft)}
+
+.tools{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.6rem}
+.swatch{width:1.6rem;height:1.6rem;border-radius:50%;border:2px solid var(--sheet);box-shadow:0 0 0 1px var(--rule);cursor:pointer;padding:0}
+.swatch[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+.tool{border:1px solid var(--rule);background:transparent;border-radius:4px;padding:.25rem .65rem;cursor:pointer;font-size:.9rem}
+.tool[aria-pressed="true"]{background:var(--blue-soft)}
+.sep{width:1px;height:1.4rem;background:var(--rule)}
+canvas{display:block;width:100%;height:auto;aspect-ratio:16/10;background:#fff;border:1px solid var(--rule);border-radius:4px;touch-action:none;cursor:crosshair}
+
+.rec{display:flex;align-items:center;gap:1rem;padding:1.5rem 0}
+.rec-btn{display:flex;align-items:center;gap:.6rem;border:1px solid var(--rule);background:transparent;border-radius:999px;padding:.6rem 1.1rem;cursor:pointer}
+.dot{width:.8rem;height:.8rem;border-radius:50%;background:var(--danger)}
+.rec-btn.live .dot{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+#recTime{font-variant-numeric:tabular-nums;color:var(--muted)}
+audio{width:100%;max-width:420px}
+
+.sheet-foot{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:1rem;padding-top:.8rem;border-top:1px solid var(--rule)}
+.hint{color:var(--muted);font-size:.9rem;margin:0}
+.primary{background:var(--ink);color:var(--sheet);border:0;border-radius:4px;padding:.55rem 1rem;cursor:pointer;font-weight:500}
+.primary:disabled{opacity:.4;cursor:not-allowed}
+.ghost{background:none;border:1px solid var(--rule);border-radius:4px;padding:.35rem .8rem;cursor:pointer;font-size:.9rem}
+
+.entries{margin:2.5rem 0 4rem}
+.entries-head{display:flex;flex-wrap:wrap;gap:.8rem;align-items:baseline;justify-content:space-between;margin-bottom:.8rem}
+h2{font-family:var(--serif);font-weight:400;font-size:1.5rem;margin:0}
+.filters{display:flex;flex-wrap:wrap;gap:.3rem}
+.io{display:flex;flex-wrap:wrap;gap:.4rem}
+#ioStatus:empty{display:none}
+.filters button{background:none;border:0;padding:.2rem .5rem;cursor:pointer;color:var(--muted);border-radius:3px}
+.filters button[aria-pressed="true"]{color:var(--ink);background:var(--blue-soft)}
+#list{list-style:none;margin:0;padding:0}
+.entry{padding:1.2rem 0;border-top:1px solid var(--rule)}
+.entry-meta{display:flex;justify-content:space-between;gap:1rem;color:var(--muted);font-size:.88rem;margin-bottom:.5rem}
+.entry-meta button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.85rem;padding:0}
+.entry-meta button:hover{color:var(--danger)}
+.e-text{font-family:var(--serif);font-size:1.08rem;line-height:1.7;white-space:pre-wrap;margin:0;max-width:68ch;color:var(--blue)}
+.e-img{max-width:100%;border:1px solid var(--rule);border-radius:4px;background:#fff}
+.e-prompt{font-family:var(--serif);font-style:italic;color:var(--muted);margin:0 0 .6rem;max-width:68ch}
+.e-field{margin:.5rem 0 0}
+.e-field b{display:block;font-weight:500;font-size:.85rem;color:var(--muted)}
+.empty{color:var(--muted);font-style:italic;font-family:var(--serif);padding:1.5rem 0}
+
+.ex-bar{display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.ex-bar label{display:flex;gap:.6rem;align-items:center;color:var(--muted)}
+select{border:1px solid var(--rule);background:var(--sheet);border-radius:4px;padding:.4rem .6rem}
+.ex-levers{color:var(--muted);margin:-.8rem 0 1.5rem;font-size:.95rem}
+.excard .ex-num{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.excard .ex-prompt{font-family:var(--serif);font-size:clamp(1.35rem,3vw,1.75rem);line-height:1.35;margin:.4rem 0 .6rem;max-width:34ch}
+.ex-day{color:var(--blue);font-size:.92rem;margin:0 0 1rem}
+.ex-field + .ex-field{margin-top:1.25rem}
+.ex-field label{display:block;font-size:.9rem;color:var(--muted);margin-bottom:.3rem}
+.ex-field .lined{min-height:calc(var(--line) * 6)}
+.excard.enter{animation:deal .45s cubic-bezier(.2,.7,.2,1)}
+@keyframes deal{from{opacity:0;transform:translateY(14px) rotate(-.6deg)}to{opacity:1;transform:none}}
+details.ex-all{margin:2rem 0 4rem}
+details.ex-all summary{cursor:pointer;color:var(--muted)}
+#exList{padding-left:1.4rem;margin:.8rem 0 0}
+#exList li{margin:.35rem 0}
+#exList button{background:none;border:0;padding:0;text-align:left;cursor:pointer;font-family:var(--serif);font-size:1rem;color:var(--ink)}
+#exList button:hover{color:var(--blue);text-decoration:underline}
+
+@media (max-width:560px){
+  header.top{padding-top:1.5rem;gap:1rem}
+  .tabs{width:100%}
+  .tabs button{flex:1;padding:.75rem .5rem}
+  .sheet{padding:1rem .9rem .9rem}
+  .modes{flex-wrap:wrap}
+  .modes button{padding:.55rem .9rem}
+  .swatch{width:2rem;height:2rem}
+  .tool{padding:.45rem .7rem}
+  canvas{aspect-ratio:4/5}
+  .sheet-foot{flex-direction:column;align-items:stretch}
+  .primary{padding:.8rem 1rem}
+  .ex-bar{flex-direction:column;align-items:stretch}
+  .ex-bar label{flex-direction:column;align-items:stretch;gap:.3rem}
+  select{width:100%;padding:.6rem}
+  .filters button{padding:.45rem .6rem}
+}
+@media (prefers-reduced-motion:reduce){
+  .excard.enter,.rec-btn.live .dot{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Carnet endophasique</h1>
+      <p>Noter ce qui se dit en soi : par écrit, en dessin ou à voix haute.</p>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" data-view="carnet" aria-selected="true">Carnet</button>
+      <button role="tab" data-view="exercices" aria-selected="false">Exercices</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ========== CARNET ========== -->
+    <section id="view-carnet">
+      <div class="sheet">
+        <div class="modes" role="radiogroup" aria-label="Mode de saisie">
+          <button role="radio" data-mode="text" aria-checked="true">Écrire</button>
+          <button role="radio" data-mode="draw" aria-checked="false">Dessiner</button>
+          <button role="radio" data-mode="audio" aria-checked="false">Enregistrer sa voix</button>
+        </div>
+
+        <div id="pane-text">
+          <textarea id="txt" class="lined" placeholder="Ce qui se dit en moi, un lâcher-prise, sur le vif…" aria-label="Texte de l'entrée"></textarea>
+        </div>
+
+        <div id="pane-draw" hidden>
+          <div class="tools">
+            <button class="swatch" data-color="#2A43A6" aria-pressed="true" aria-label="Encre bleue" style="background:#2A43A6"></button>
+            <button class="swatch" data-color="#1D2830" aria-pressed="false" aria-label="Encre noire" style="background:#1D2830"></button>
+            <button class="swatch" data-color="#B0412E" aria-pressed="false" aria-label="Encre rouge" style="background:#B0412E"></button>
+            <button class="swatch" data-color="#C99A2E" aria-pressed="false" aria-label="Encre ocre" style="background:#C99A2E"></button>
+            <span class="sep"></span>
+            <button class="tool" data-size="2" aria-pressed="false">Fin</button>
+            <button class="tool" data-size="4" aria-pressed="true">Moyen</button>
+            <button class="tool" data-size="10" aria-pressed="false">Épais</button>
+            <span class="sep"></span>
+            <button class="tool" id="eraser" aria-pressed="false">Gomme</button>
+            <button class="tool" id="clearCanvas">Effacer tout</button>
+          </div>
+          <canvas id="cv" aria-label="Zone de dessin"></canvas>
+        </div>
+
+        <div id="pane-audio" hidden>
+          <div class="rec">
+            <button id="recBtn" class="rec-btn"><span class="dot"></span><span id="recLabel">Commencer l'enregistrement</span></button>
+            <span id="recTime">0:00</span>
+          </div>
+          <audio id="recPreview" controls hidden></audio>
+          <p id="recMsg" class="hint"></p>
+        </div>
+
+        <div class="sheet-foot">
+          <p id="status" class="hint" aria-live="polite">Les entrées restent dans ce navigateur, sur cet appareil.</p>
+          <button id="saveBtn" class="primary">Ajouter au carnet</button>
+        </div>
+      </div>
+
+      <section class="entries" aria-labelledby="entriesTitle">
+        <div class="entries-head">
+          <h2 id="entriesTitle">Entrées</h2>
+          <div class="filters" role="group" aria-label="Filtrer">
+            <button data-filter="all" aria-pressed="true">Tout</button>
+            <button data-filter="text" aria-pressed="false">Texte</button>
+            <button data-filter="drawing" aria-pressed="false">Dessins</button>
+            <button data-filter="audio" aria-pressed="false">Voix</button>
+            <button data-filter="exercise" aria-pressed="false">Exercices</button>
+          </div>
+          <div class="io">
+            <button id="exportBtn" class="ghost">Exporter le carnet</button>
+            <button id="importBtn" class="ghost">Importer une sauvegarde</button>
+            <input id="importFile" type="file" accept=".json,application/json" hidden>
+          </div>
+          <p id="ioStatus" class="hint" aria-live="polite" style="width:100%"></p>
+        </div>
+        <ol id="list"></ol>
+      </section>
+    </section>
+
+    <!-- ========== EXERCICES ========== -->
+    <section id="view-exercices" hidden>
+      <div class="ex-bar">
+        <label>Catégorie
+          <select id="cat"></select>
+        </label>
+        <button id="drawEx" class="primary">Tirer un exercice au hasard</button>
+      </div>
+      <p id="catLevers" class="ex-levers"></p>
+
+      <div id="exEmpty" class="empty">Tirez un exercice pour commencer à écrire.</div>
+
+      <div id="exCard" class="sheet excard" hidden>
+        <div class="ex-num" id="exNum"></div>
+        <p class="ex-prompt" id="exPrompt"></p>
+        <p class="ex-day" id="exDay" hidden></p>
+        <div id="exFields"></div>
+        <div class="sheet-foot">
+          <p id="exStatus" class="hint" aria-live="polite"></p>
+          <button id="exSave" class="primary">Ajouter au carnet</button>
+        </div>
+      </div>
+
+      <details class="ex-all">
+        <summary>Choisir un exercice précis</summary>
+        <ol id="exList"></ol>
+      </details>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ---------------- Données des exercices ---------------- */
+const CATEGORIES = [
+  {
+    id: "emo",
+    title: "Écriture émotionnelle",
+    levers: "Leviers : pronoms, tiroirs verbaux",
+    exercises: [
+      { n:1, prompt:"Écrivez une émotion réelle, à la première puis à la troisième personne, trois jours de suite. Relisez-vous : notez vos ressentis.",
+        days:3,
+        fields:[
+          {key:"je", label:"À la première personne"},
+          {key:"il", label:"À la troisième personne"},
+          {key:"ressentis", label:"Après relecture : vos ressentis"}
+        ] },
+      { n:2, prompt:"Écrivez une émotion réelle à la première personne." },
+      { n:3, prompt:"Écrivez une émotion négative à la première personne." },
+      { n:4, prompt:"Écrivez une émotion négative à la troisième personne." },
+      { n:5, prompt:"Écrivez une émotion positive à la première personne." },
+      { n:6, prompt:"Écrivez une émotion négative impliquant le corps ou une partie du corps à la première personne." },
+      { n:7, prompt:"Écrivez une émotion négative impliquant le corps ou une partie du corps à la troisième personne." },
+      { n:8, prompt:"Écrivez une émotion positive impliquant le corps ou une partie du corps à la première personne." }
+    ]
+  },
+  {
+    id: "visu",
+    title: "Visualisation : les composantes de la vie intérieure",
+    levers: "",
+    exercises: [
+      { n:9,  prompt:"Écrivez un paysage de votre pays d’origine. Évoquez les émotions ressenties à la première personne.",
+        fields:[
+          {key:"paysage", label:"Le paysage de votre pays d’origine"},
+          {key:"emotions", label:"Les émotions ressenties, à la première personne"}
+        ] },
+      { n:10, prompt:"Écrivez un paysage de votre pays d’origine. Évoquez les émotions ressenties à la troisième personne.",
+        fields:[
+          {key:"paysage", label:"Le paysage de votre pays d’origine"},
+          {key:"emotions", label:"Les émotions ressenties, à la troisième personne"}
+        ] },
+      { n:11, prompt:"Créez un lieu imaginaire où vous vous sentez bien. Décrivez-le à la première personne.",
+        fields:[
+          {key:"lieu", label:"Le lieu imaginaire : ce qui le compose"},
+          {key:"description", label:"Sa description, à la première personne"}
+        ] }
+    ]
+  },
+  {
+    id: "auto",
+    title: "Autoportrait et représentations de soi",
+    levers: "",
+    exercises: [
+      { n:12, prompt:"Écrivez une série de mots négatifs vous décrivant, puis une série de mots positifs en face de chaque mot négatif. Allongez-vous et interrogez chaque partie de votre corps pour savoir à quelle liste elle vous renvoie. Dansez ce cheminement intérieur. Écrivez ensuite librement dans votre carnet pendant au moins cinq minutes.",
+        fields:[
+          {key:"negatifs", label:"Mots négatifs vous décrivant"},
+          {key:"positifs", label:"Mots positifs, en face de chaque mot négatif"},
+          {key:"libre", label:"Écriture libre, après la danse (au moins cinq minutes)"}
+        ] },
+      { n:13, prompt:"Faites un portrait de vous, librement." },
+      { n:14, prompt:"Faites un portrait de vous avec des adjectifs mélioratifs." },
+      { n:15, prompt:"Visualisez l’enfant que vous étiez lorsque vous aviez cinq ans et adressez-vous à cet enfant à la seconde personne." }
+    ]
+  },
+  {
+    id: "memo",
+    title: "Fonctions positives de la parole intérieure : mémoire autobiographique",
+    levers: "",
+    exercises: [
+      { n:16, prompt:"Racontez un souvenir heureux sans paroles, en utilisant successivement toutes les parties de votre corps. Écrivez ensuite librement dans votre carnet pendant au moins cinq minutes.",
+        fields:[{key:"libre", label:"Écriture libre, après le récit corporel (au moins cinq minutes)"}] },
+      { n:17, prompt:"Racontez un souvenir triste sans paroles, en utilisant successivement toutes les parties de votre corps. Écrivez ensuite librement dans votre carnet pendant au moins cinq minutes.",
+        fields:[{key:"libre", label:"Écriture libre, après le récit corporel (au moins cinq minutes)"}] },
+      { n:18, prompt:"Racontez un souvenir triste à la première personne." },
+      { n:19, prompt:"Racontez un souvenir triste à la troisième personne." },
+      { n:20, prompt:"Racontez un souvenir joyeux à la première personne." },
+      { n:21, prompt:"Racontez votre pire souvenir à la première personne." },
+      { n:22, prompt:"Racontez votre pire souvenir à la troisième personne." },
+      { n:23, prompt:"Racontez un souvenir heureux à la première personne." }
+    ]
+  },
+  {
+    id: "prag",
+    title: "Fonctions positives de la parole intérieure et pragmatique endophasique",
+    levers: "",
+    exercises: [
+      { n:24, prompt:"Encouragez-vous, en utilisant la forme et le pronom de votre choix." },
+      { n:25, prompt:"Complimentez-vous." }
+    ]
+  }
+];
+const DEFAULT_FIELDS = [{key:"texte", label:"Votre texte"}];
+
+/* ---------------- Stockage local (IndexedDB) ---------------- */
+const DB_NAME = "carnet-endophasique", STORE = "entries";
+let dbPromise = null;
+function db(){
+  if (!dbPromise) dbPromise = new Promise((res, rej) => {
+    const r = indexedDB.open(DB_NAME, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(STORE, {keyPath:"id"});
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  return dbPromise;
+}
+async function tx(mode, fn){
+  const d = await db();
+  return new Promise((res, rej) => {
+    const t = d.transaction(STORE, mode);
+    const out = fn(t.objectStore(STORE));
+    t.oncomplete = () => res(out && out.result !== undefined ? out.result : undefined);
+    t.onerror = () => rej(t.error);
+  });
+}
+const putEntry = e => tx("readwrite", s => s.put(e));
+const delEntry = id => tx("readwrite", s => s.delete(id));
+const allEntries = () => tx("readonly", s => s.getAll());
+
+function newId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ---------------- Utilitaires ---------------- */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const fmtDate = ts => new Date(ts).toLocaleString("fr-FR", {weekday:"long", day:"numeric", month:"long", hour:"2-digit", minute:"2-digit"});
+const fmtDur = s => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`;
+function flash(el, msg){ el.textContent = msg; clearTimeout(el._t); el._t = setTimeout(()=>{ el.textContent = el.dataset.default || ""; }, 3500); }
+$("#status").dataset.default = $("#status").textContent;
+
+/* ---------------- Onglets ---------------- */
+$$(".tabs button").forEach(b => b.addEventListener("click", () => {
+  $$(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  $("#view-carnet").hidden = b.dataset.view !== "carnet";
+  $("#view-exercices").hidden = b.dataset.view !== "exercices";
+}));
+
+/* ---------------- Modes du carnet ---------------- */
+let mode = "text";
+$$(".modes button").forEach(b => b.addEventListener("click", () => {
+  mode = b.dataset.mode;
+  $$(".modes button").forEach(x => x.setAttribute("aria-checked", x === b));
+  $("#pane-text").hidden = mode !== "text";
+  $("#pane-draw").hidden = mode !== "draw";
+  $("#pane-audio").hidden = mode !== "audio";
+  if (mode === "draw") initCanvas();
+}));
+
+/* ---------------- Dessin ---------------- */
+const cv = $("#cv"), ctx = cv.getContext("2d");
+let canvasReady = false, drawing = false, dirty = false, last = null;
+let pen = {color:"#2A43A6", size:4, eraser:false};
+function initCanvas(){
+  if (canvasReady) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const w = cv.clientWidth, h = cv.clientHeight || Math.round(w * 10/16);
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  logical = {w, h};
+  cv.style.aspectRatio = `${w} / ${h}`;
+  ctx.scale(dpr, dpr);
+  fillWhite();
+  canvasReady = true;
+}
+let logical = {w:1, h:1};
+function fillWhite(){ ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.fillStyle="#fff"; ctx.fillRect(0,0,cv.width,cv.height); ctx.restore(); }
+function pos(e){ const r = cv.getBoundingClientRect(); return {x:(e.clientX-r.left)*(logical.w/r.width), y:(e.clientY-r.top)*(logical.h/r.height)}; }
+cv.addEventListener("pointerdown", e => { drawing = true; last = pos(e); cv.setPointerCapture(e.pointerId); stroke(last, last, e); });
+cv.addEventListener("pointermove", e => { if (!drawing) return; const p = pos(e); stroke(last, p, e); last = p; });
+["pointerup","pointercancel","pointerleave"].forEach(t => cv.addEventListener(t, () => { drawing = false; }));
+function stroke(a, b, e){
+  const pressure = e.pointerType === "pen" && e.pressure ? 0.5 + e.pressure : 1;
+  ctx.strokeStyle = pen.eraser ? "#fff" : pen.color;
+  ctx.lineWidth = (pen.eraser ? pen.size * 4 : pen.size) * pressure;
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x + .01, b.y + .01); ctx.stroke();
+  if (!pen.eraser) dirty = true;
+}
+$$(".swatch").forEach(b => b.addEventListener("click", () => {
+  pen.color = b.dataset.color; pen.eraser = false;
+  $$(".swatch").forEach(x => x.setAttribute("aria-pressed", x === b));
+  $("#eraser").setAttribute("aria-pressed", "false");
+}));
+$$(".tool[data-size]").forEach(b => b.addEventListener("click", () => {
+  pen.size = +b.dataset.size;
+  $$(".tool[data-size]").forEach(x => x.setAttribute("aria-pressed", x === b));
+}));
+$("#eraser").addEventListener("click", e => {
+  pen.eraser = !pen.eraser; e.currentTarget.setAttribute("aria-pressed", pen.eraser);
+});
+$("#clearCanvas").addEventListener("click", () => { fillWhite(); dirty = false; });
+
+/* ---------------- Enregistrement audio ---------------- */
+let recorder = null, chunks = [], pendingAudio = null, recStart = 0, recTimer = null, recSeconds = 0;
+$("#recBtn").addEventListener("click", async () => {
+  if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+  if (!navigator.mediaDevices || !window.MediaRecorder) {
+    $("#recMsg").textContent = "Micro indisponible ici. Ouvrez la page via http://localhost (voir les instructions de lancement).";
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    const mime = ["audio/webm;codecs=opus","audio/webm","audio/mp4"].find(t => MediaRecorder.isTypeSupported(t)) || "";
+    recorder = new MediaRecorder(stream, mime ? {mimeType:mime} : undefined);
+    chunks = [];
+    recorder.ondataavailable = e => e.data.size && chunks.push(e.data);
+    recorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      clearInterval(recTimer);
+      pendingAudio = new Blob(chunks, {type: recorder.mimeType || "audio/webm"});
+      const p = $("#recPreview"); p.src = URL.createObjectURL(pendingAudio); p.hidden = false;
+      $("#recBtn").classList.remove("live");
+      $("#recLabel").textContent = "Recommencer l'enregistrement";
+      $("#recMsg").textContent = "Écoutez, puis ajoutez au carnet.";
+    };
+    recorder.start();
+    pendingAudio = null; $("#recPreview").hidden = true;
+    recStart = Date.now(); recSeconds = 0;
+    recTimer = setInterval(() => { recSeconds = (Date.now()-recStart)/1000; $("#recTime").textContent = fmtDur(recSeconds); }, 250);
+    $("#recBtn").classList.add("live");
+    $("#recLabel").textContent = "Arrêter";
+    $("#recMsg").textContent = "";
+  } catch (err) {
+    $("#recMsg").textContent = "Accès au micro refusé. Autorisez-le dans les réglages du navigateur, puis réessayez.";
+  }
+});
+
+/* ---------------- Sauvegarde carnet ---------------- */
+$("#saveBtn").addEventListener("click", async () => {
+  const st = $("#status");
+  let entry = {id:newId(), created:Date.now()};
+  if (mode === "text") {
+    const t = $("#txt").value.trim();
+    if (!t) return flash(st, "Écrivez quelque chose avant d'ajouter.");
+    Object.assign(entry, {type:"text", text:t});
+    $("#txt").value = "";
+  } else if (mode === "draw") {
+    if (!dirty) return flash(st, "Le dessin est vide.");
+    Object.assign(entry, {type:"drawing", image: cv.toDataURL("image/png")});
+    fillWhite(); dirty = false;
+  } else {
+    if (recorder && recorder.state === "recording") return flash(st, "Arrêtez l'enregistrement d'abord.");
+    if (!pendingAudio) return flash(st, "Aucun enregistrement à ajouter.");
+    Object.assign(entry, {type:"audio", audio: pendingAudio, duration: recSeconds});
+    pendingAudio = null; $("#recPreview").hidden = true; $("#recTime").textContent = "0:00";
+    $("#recLabel").textContent = "Commencer l'enregistrement";
+    $("#recMsg").textContent = "";
+  }
+  await putEntry(entry);
+  flash(st, "Ajouté au carnet.");
+  renderList();
+});
+
+/* ---------------- Liste des entrées ---------------- */
+let filter = "all";
+$$(".filters button").forEach(b => b.addEventListener("click", () => {
+  filter = b.dataset.filter;
+  $$(".filters button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderList();
+}));
+const TYPE_LABEL = {text:"Texte", drawing:"Dessin", audio:"Voix", exercise:"Exercice"};
+
+async function renderList(){
+  const list = $("#list");
+  let items = (await allEntries()).sort((a,b) => b.created - a.created);
+  if (filter !== "all") items = items.filter(e => e.type === filter);
+  list.innerHTML = "";
+  if (!items.length) {
+    list.innerHTML = `<li class="empty">${filter === "all" ? "Le carnet est vide. Votre première entrée apparaîtra ici." : "Aucune entrée de ce type pour l'instant."}</li>`;
+    return;
+  }
+  for (const e of items) {
+    const li = document.createElement("li"); li.className = "entry";
+    let label = TYPE_LABEL[e.type];
+    if (e.type === "exercise") label += ` · ${e.exercise.categoryTitle}, n° ${e.exercise.n}`;
+    li.innerHTML = `<div class="entry-meta"><span>${fmtDate(e.created)} — ${label}</span><button aria-label="Supprimer cette entrée">Supprimer</button></div>`;
+    const body = document.createElement("div");
+    if (e.type === "text") {
+      const p = document.createElement("p"); p.className = "e-text"; p.textContent = e.text; body.append(p);
+    } else if (e.type === "drawing") {
+      const img = new Image(); img.className = "e-img"; img.src = e.image; img.alt = "Dessin du carnet"; body.append(img);
+    } else if (e.type === "audio") {
+      const a = document.createElement("audio"); a.controls = true; a.src = URL.createObjectURL(e.audio); body.append(a);
+      if (e.duration) { const d = document.createElement("p"); d.className = "hint"; d.textContent = fmtDur(e.duration); body.append(d); }
+    } else if (e.type === "exercise") {
+      const pr = document.createElement("p"); pr.className = "e-prompt"; pr.textContent = e.exercise.prompt; body.append(pr);
+      for (const f of e.exercise.answers) {
+        const div = document.createElement("div"); div.className = "e-field";
+        const b = document.createElement("b"); b.textContent = f.label;
+        const p = document.createElement("p"); p.className = "e-text"; p.textContent = f.text || "—";
+        if (e.exercise.answers.length > 1) div.append(b);
+        div.append(p); body.append(div);
+      }
+    }
+    li.append(body);
+    li.querySelector(".entry-meta button").addEventListener("click", async () => {
+      if (!confirm("Supprimer définitivement cette entrée ?")) return;
+      await delEntry(e.id); renderList();
+    });
+    list.append(li);
+  }
+}
+
+/* ---------------- Export ---------------- */
+const blobToDataURL = b => new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); });
+$("#exportBtn").addEventListener("click", async () => {
+  const items = await allEntries();
+  const out = [];
+  for (const e of items) {
+    const c = {...e};
+    if (c.audio instanceof Blob) c.audio = await blobToDataURL(c.audio);
+    c.createdISO = new Date(c.created).toISOString();
+    out.push(c);
+  }
+  const blob = new Blob([JSON.stringify({app:"carnet-endophasique", exported:new Date().toISOString(), entries:out}, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `carnet-endophasique-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+});
+
+/* ---------------- Import ---------------- */
+async function dataURLToBlob(u){ return (await fetch(u)).blob(); }
+$("#importBtn").addEventListener("click", () => $("#importFile").click());
+$("#importFile").addEventListener("change", async e => {
+  const file = e.target.files[0]; e.target.value = "";
+  if (!file) return;
+  const st = $("#ioStatus");
+  try {
+    const data = JSON.parse(await file.text());
+    if (data.app !== "carnet-endophasique" || !Array.isArray(data.entries)) throw new Error("format");
+    const existing = new Set((await allEntries()).map(x => x.id));
+    let added = 0;
+    for (const raw of data.entries) {
+      if (!raw.id || existing.has(raw.id)) continue;
+      const e = {...raw}; delete e.createdISO;
+      if (typeof e.audio === "string") e.audio = await dataURLToBlob(e.audio);
+      await putEntry(e); added++;
+    }
+    flash(st, added ? `${added} entrée(s) importée(s).` : "Rien de nouveau : toutes ces entrées sont déjà dans le carnet.");
+    renderList();
+  } catch {
+    flash(st, "Ce fichier n'est pas une sauvegarde du carnet. Choisissez un fichier exporté depuis cette page.");
+  }
+});
+
+/* ---------------- Exercices ---------------- */
+let current = null;
+const catSel = $("#cat");
+CATEGORIES.forEach(c => catSel.add(new Option(c.title, c.id)));
+const currentCat = () => CATEGORIES.find(c => c.id === catSel.value);
+function renderCatInfo(){
+  const c = currentCat();
+  $("#catLevers").textContent = c.levers;
+  $("#catLevers").hidden = !c.levers;
+  const ol = $("#exList"); ol.innerHTML = "";
+  ol.start = c.exercises[0].n;
+  if (current && !c.exercises.includes(current)) {
+    current = null; $("#exCard").hidden = true; $("#exEmpty").hidden = false;
+  }
+  c.exercises.forEach(ex => {
+    const li = document.createElement("li");
+    const b = document.createElement("button"); b.textContent = ex.prompt;
+    b.addEventListener("click", () => showExercise(ex));
+    li.append(b); ol.append(li);
+  });
+}
+catSel.addEventListener("change", renderCatInfo);
+
+$("#drawEx").addEventListener("click", () => {
+  const pool = currentCat().exercises.filter(x => !current || x.n !== current.n);
+  showExercise(pool[Math.floor(Math.random() * pool.length)]);
+});
+
+async function showExercise(ex){
+  current = ex;
+  const c = currentCat(), card = $("#exCard");
+  $("#exEmpty").hidden = true; card.hidden = false;
+  card.classList.remove("enter"); void card.offsetWidth; card.classList.add("enter");
+  $("#exNum").textContent = `${c.title} · exercice n° ${ex.n}`;
+  $("#exPrompt").textContent = ex.prompt;
+  const fields = $("#exFields"); fields.innerHTML = "";
+  (ex.fields || DEFAULT_FIELDS).forEach((f, i) => {
+    const wrap = document.createElement("div"); wrap.className = "ex-field";
+    const id = `exf-${f.key}`;
+    wrap.innerHTML = `<label for="${id}">${f.label}</label><textarea id="${id}" class="lined" data-key="${f.key}" data-label="${f.label}"></textarea>`;
+    fields.append(wrap);
+  });
+  const day = $("#exDay");
+  if (ex.days) {
+    const done = new Set((await allEntries())
+      .filter(e => e.type === "exercise" && e.exercise.category === c.id && e.exercise.n === ex.n)
+      .map(e => new Date(e.created).toDateString()));
+    const today = done.has(new Date().toDateString());
+    const n = done.size;
+    day.hidden = false;
+    day.textContent = n >= ex.days
+      ? `Série de ${ex.days} jours terminée (${n} jours au total). Vous pouvez en commencer une nouvelle.`
+      : today ? `Jour ${n} sur ${ex.days} déjà écrit aujourd'hui. Revenez demain pour le jour ${n+1}.`
+              : `Jour ${n+1} sur ${ex.days}.`;
+  } else day.hidden = true;
+  $("#exStatus").textContent = "";
+  fields.querySelector("textarea").focus({preventScroll:true});
+}
+
+$("#exSave").addEventListener("click", async () => {
+  if (!current) return;
+  const answers = $$("#exFields textarea").map(t => ({key:t.dataset.key, label:t.dataset.label, text:t.value.trim()}));
+  if (!answers.some(a => a.text)) return flash($("#exStatus"), "Écrivez quelque chose avant d'ajouter.");
+  const c = currentCat();
+  await putEntry({id:newId(), created:Date.now(), type:"exercise",
+    exercise:{category:c.id, categoryTitle:c.title, n:current.n, prompt:current.prompt, answers}});
+  $$("#exFields textarea").forEach(t => t.value = "");
+  flash($("#exStatus"), "Ajouté au carnet.");
+  renderList();
+  if (current.days) showExercise(current);
+});
+
+/* ---------------- Démarrage ---------------- */
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+renderCatInfo();
+renderList().catch(() => {
+  $("#list").innerHTML = `<li class="empty">Le stockage local est bloqué dans ce navigateur (navigation privée ?). Les entrées ne pourront pas être conservées.</li>`;
+});
+</script>
+</body>
+</html>
