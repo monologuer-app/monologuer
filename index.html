@@ -96,7 +96,30 @@ audio{width:100%;max-width:420px}
 h2{font-family:var(--serif);font-weight:400;font-size:1.75rem;margin:0;letter-spacing:-.01em}
 .filters{display:flex;gap:.25rem;overflow-x:auto;scrollbar-width:none;margin:0 -.25rem;padding:0 .25rem}
 .filters::-webkit-scrollbar{display:none}
-.backup{margin-top:2.5rem;padding-top:1.25rem;border-top:1px solid var(--rule)}
+.backup{margin-top:2.5rem;padding-top:.5rem;border-top:1px solid var(--rule)}
+.backup-block{padding:1.1rem 0}
+.backup-block + .backup-block{border-top:1px dashed var(--rule)}
+h3{font-family:var(--serif);font-weight:500;font-size:1.1rem;margin:0 0 .35rem}
+.pill-btn{margin-top:.8rem;background:transparent;border:1px solid var(--ink);color:var(--ink);border-radius:999px;padding:.5rem 1.1rem;cursor:pointer;font-weight:500}
+@media (hover:hover){.pill-btn:hover{background:var(--ink);color:var(--sheet)}}
+dialog{border:1px solid var(--rule);border-radius:10px;background:var(--sheet);color:var(--ink);padding:1.25rem;width:min(560px, calc(100% - 1.5rem));max-height:min(86vh, 760px);overflow:auto}
+dialog::backdrop{background:rgba(20,26,30,.45)}
+.dlg-head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin-bottom:.6rem}
+.dlg-head h2{font-size:1.45rem}
+.dlg-close{background:none;border:0;color:var(--muted);cursor:pointer;font-size:.9rem;padding:.2rem 0}
+.dlg-tools{display:flex;gap:1.2rem;margin:.6rem 0 .3rem}
+#shareList{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule)}
+#shareList li{border-bottom:1px solid var(--rule)}
+#shareList label{display:grid;grid-template-columns:auto 1fr;gap:.2rem .75rem;padding:.7rem .1rem;cursor:pointer}
+#shareList input{grid-row:1 / span 2;margin-top:.2rem;width:1.1rem;height:1.1rem;accent-color:var(--blue)}
+.pick-meta{font-size:.82rem;color:var(--muted)}
+.pick-text{font-family:var(--serif);font-size:.98rem;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dlg-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.8rem;margin-top:1rem}
+.dlg-actions{display:flex;gap:.6rem;align-items:center}
+.dlg-actions .pill-btn{margin-top:0}
+.ready-summary{font-family:var(--serif);font-size:1.15rem;margin:.2rem 0 .6rem}
+#shareStatus:empty{display:none}
+#shareStatus{margin-top:.8rem}
 .io{display:flex;flex-wrap:wrap;gap:1.25rem;margin-top:.6rem}
 .link-btn{background:none;border:0;padding:.2rem 0;cursor:pointer;color:var(--blue);font-size:.92rem;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
 #ioStatus{margin-top:.5rem}
@@ -240,11 +263,19 @@ details.ex-all summary{cursor:pointer;color:var(--muted)}
         </div>
         <ol id="list"></ol>
         <div class="backup">
-          <p class="hint">Les entrées restent dans ce navigateur, sur cet appareil. Exportez régulièrement une sauvegarde pour ne rien perdre.</p>
-          <div class="io">
-            <button id="exportBtn" class="link-btn">Exporter le carnet</button>
-            <button id="importBtn" class="link-btn">Importer une sauvegarde</button>
-            <input id="importFile" type="file" accept=".json,application/json" hidden>
+          <div class="backup-block">
+            <h3>Transmettre à l'équipe</h3>
+            <p class="hint">Choisissez les entrées que vous souhaitez partager. Vous obtenez un dossier lisible, avec vos textes, vos dessins et vos enregistrements, que vous pouvez relire avant de l'envoyer.</p>
+            <button id="shareOpenBtn" class="pill-btn">Préparer un document à transmettre</button>
+          </div>
+          <div class="backup-block">
+            <h3>Sauvegarde</h3>
+            <p class="hint">Les entrées restent dans ce navigateur, sur cet appareil. Une sauvegarde permet de les retrouver sur un autre appareil ou dans un autre navigateur.</p>
+            <div class="io">
+              <button id="exportBtn" class="link-btn">Télécharger une sauvegarde</button>
+              <button id="importBtn" class="link-btn">Importer une sauvegarde</button>
+              <input id="importFile" type="file" accept=".json,application/json" hidden>
+            </div>
           </div>
           <p id="ioStatus" class="hint" aria-live="polite"></p>
         </div>
@@ -283,6 +314,37 @@ details.ex-all summary{cursor:pointer;color:var(--muted)}
     </section>
   </main>
 </div>
+
+<dialog id="shareDlg" aria-labelledby="shareTitle">
+  <div class="dlg-head">
+    <h2 id="shareTitle">Transmettre à l'équipe</h2>
+    <button class="dlg-close" id="shareClose" aria-label="Fermer">Fermer</button>
+  </div>
+  <div id="sharePick">
+    <p class="hint">Cochez les entrées à inclure. Rien n'est envoyé automatiquement : vous obtenez un fichier, et c'est vous qui décidez de le transmettre.</p>
+    <div class="dlg-tools">
+      <button id="shareAll" class="link-btn">Tout cocher</button>
+      <button id="shareNone" class="link-btn">Tout décocher</button>
+    </div>
+    <ul id="shareList"></ul>
+    <div class="dlg-foot">
+      <span id="shareCount" class="hint"></span>
+      <button id="sharePrepare" class="primary">Préparer le document</button>
+    </div>
+  </div>
+  <div id="shareReady" hidden>
+    <p id="shareSummary" class="ready-summary"></p>
+    <p class="hint">Le fichier .zip contient <b>carnet.html</b>, à ouvrir dans un navigateur pour tout relire, avec les dessins et les enregistrements ; <b>carnet.txt</b>, le texte seul ; et les dossiers <b>dessins</b> et <b>voix</b>.</p>
+    <div class="dlg-foot">
+      <button id="shareBack" class="link-btn">Modifier la sélection</button>
+      <span class="dlg-actions">
+        <button id="shareSend" class="pill-btn" hidden>Partager…</button>
+        <button id="shareDownload" class="primary">Télécharger</button>
+      </span>
+    </div>
+  </div>
+  <p id="shareStatus" class="hint" aria-live="polite"></p>
+</dialog>
 
 <script>
 /* ---------------- Données des exercices ---------------- */
@@ -608,6 +670,144 @@ $("#exportBtn").addEventListener("click", async () => {
   a.href = URL.createObjectURL(blob);
   a.download = `carnet-endophasique-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
+});
+
+/* ---------------- Transmettre à l'équipe (dossier lisible) ---------------- */
+const JSZIP_URL = "https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";
+function loadJSZip(){
+  if (window.JSZip) return Promise.resolve(window.JSZip);
+  return new Promise((res, rej) => {
+    const sc = document.createElement("script");
+    sc.src = JSZIP_URL; sc.onload = () => res(window.JSZip); sc.onerror = () => rej(new Error("jszip"));
+    document.head.append(sc);
+  });
+}
+const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+const fileStamp = ts => { const d = new Date(ts); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}h${pad(d.getMinutes())}`; };
+const longDate = ts => { const d = new Date(ts); return d.toLocaleDateString("fr-FR", {weekday:"long", day:"numeric", month:"long", year:"numeric"}) + ", " + d.toLocaleTimeString("fr-FR", {hour:"2-digit", minute:"2-digit"}); };
+const audioExt = t => /mp4|m4a|aac/.test(t) ? "m4a" : /ogg/.test(t) ? "ogg" : "webm";
+function entryLabel(e){
+  if (e.type === "exercise") return `Exercice n° ${e.exercise.n} (${e.exercise.categoryTitle})`;
+  return {text:"Texte", drawing:"Dessin", audio:"Enregistrement"}[e.type];
+}
+function entrySnippet(e){
+  if (e.type === "text") return e.text;
+  if (e.type === "drawing") return "Dessin";
+  if (e.type === "audio") return "Enregistrement" + (e.duration ? " de " + fmtDur(e.duration) : "");
+  const first = e.exercise.answers.find(a => a.text);
+  return first ? first.text : e.exercise.prompt;
+}
+
+let shareFile = null;
+async function openShare(){
+  const items = (await allEntries()).sort((a,b) => b.created - a.created);
+  const ul = $("#shareList"); ul.innerHTML = "";
+  if (!items.length) { flash($("#ioStatus"), "Le carnet est vide : il n'y a rien à transmettre pour l'instant."); return; }
+  for (const e of items) {
+    const li = document.createElement("li");
+    li.innerHTML = `<label><input type="checkbox" value="${esc(e.id)}" checked><span class="pick-meta">${esc(fmtDate(e.created))} · ${esc(entryLabel(e))}</span><span class="pick-text">${esc(entrySnippet(e))}</span></label>`;
+    ul.append(li);
+  }
+  $("#sharePick").hidden = false; $("#shareReady").hidden = true; $("#shareStatus").textContent = "";
+  updateShareCount();
+  $("#shareDlg").showModal();
+}
+function selectedIds(){ return $$("#shareList input:checked").map(i => i.value); }
+function updateShareCount(){
+  const n = selectedIds().length, total = $$("#shareList input").length;
+  $("#shareCount").textContent = `${n} entrée${n > 1 ? "s" : ""} sur ${total}`;
+  $("#sharePrepare").disabled = n === 0;
+}
+$("#shareOpenBtn").addEventListener("click", openShare);
+$("#shareClose").addEventListener("click", () => $("#shareDlg").close());
+$("#shareList").addEventListener("change", updateShareCount);
+$("#shareAll").addEventListener("click", () => { $$("#shareList input").forEach(i => i.checked = true); updateShareCount(); });
+$("#shareNone").addEventListener("click", () => { $$("#shareList input").forEach(i => i.checked = false); updateShareCount(); });
+$("#shareBack").addEventListener("click", () => { $("#sharePick").hidden = false; $("#shareReady").hidden = true; });
+
+$("#sharePrepare").addEventListener("click", async () => {
+  const st = $("#shareStatus"), btn = $("#sharePrepare");
+  const ids = new Set(selectedIds());
+  btn.disabled = true; st.textContent = "Préparation du document…";
+  try {
+    const JSZip = await loadJSZip();
+    const items = (await allEntries()).filter(e => ids.has(e.id)).sort((a,b) => a.created - b.created);
+    const zip = new JSZip();
+    const exported = longDate(Date.now());
+    let txt = `MONOLOGUER · Carnet endophasique\nDocument préparé le ${exported}\n${items.length} entrée${items.length > 1 ? "s" : ""}\n`;
+    let html = "";
+    let nDraw = 0, nAudio = 0, nText = 0;
+    for (const e of items) {
+      const when = longDate(e.created), label = entryLabel(e);
+      txt += `\n────────────────────────────\n${when} | ${label}\n\n`;
+      html += `<article><p class="meta">${esc(when)} <span>${esc(label)}</span></p>`;
+      if (e.type === "text") {
+        nText++;
+        txt += e.text + "\n";
+        html += `<p class="t">${esc(e.text)}</p>`;
+      } else if (e.type === "drawing") {
+        nDraw++;
+        const name = `dessins/${fileStamp(e.created)}_dessin-${nDraw}.png`;
+        zip.file(name, await (await fetch(e.image)).blob());
+        txt += `[Dessin : ${name}]\n`;
+        html += `<img src="${name}" alt="Dessin">`;
+      } else if (e.type === "audio") {
+        nAudio++;
+        const name = `voix/${fileStamp(e.created)}_voix-${nAudio}.${audioExt(e.audio.type || "")}`;
+        zip.file(name, e.audio);
+        txt += `[Enregistrement${e.duration ? " de " + fmtDur(e.duration) : ""} : ${name}]\n`;
+        html += `<audio controls src="${name}"></audio><p class="file">${esc(name)}</p>`;
+      } else {
+        nText++;
+        txt += `Consigne : ${e.exercise.prompt}\n`;
+        html += `<p class="prompt">${esc(e.exercise.prompt)}</p>`;
+        for (const a of e.exercise.answers) {
+          if (!a.text) continue;
+          if (e.exercise.answers.length > 1) { txt += `\n${a.label} :\n`; html += `<p class="label">${esc(a.label)}</p>`; }
+          else txt += "\n";
+          txt += a.text + "\n";
+          html += `<p class="t">${esc(a.text)}</p>`;
+        }
+      }
+      html += `</article>`;
+    }
+    zip.file("carnet.txt", txt);
+    zip.file("carnet.html", `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Carnet endophasique</title><style>
+body{margin:0;background:#E9ECE6;color:#1D2830;font:16px/1.6 Georgia,"Times New Roman",serif}
+main{max-width:720px;margin:0 auto;padding:2.5rem 1.25rem 4rem}
+h1{font-weight:400;font-size:2rem;margin:0}.sub{color:#66706A;margin:.3rem 0 2rem;font-family:system-ui,sans-serif;font-size:.9rem}
+article{border-top:1px solid #D2D8CE;padding:1.3rem 0}
+.meta{font-family:system-ui,sans-serif;font-size:.85rem;color:#66706A;margin:0 0 .6rem}.meta span{border:1px solid #D2D8CE;border-radius:99px;padding:.05rem .5rem;margin-left:.4rem}
+.t{white-space:pre-wrap;color:#2A43A6;font-size:1.08rem;margin:.2rem 0}.prompt{font-style:italic;color:#66706A;margin:0 0 .6rem}
+.label{font-family:system-ui,sans-serif;font-size:.82rem;color:#66706A;margin:.9rem 0 .1rem}
+img{max-width:100%;background:#fff;border:1px solid #D2D8CE;border-radius:4px}audio{width:100%;max-width:420px}.file{font-family:system-ui,sans-serif;font-size:.8rem;color:#66706A;margin:.2rem 0 0}
+</style></head><body><main><h1>Carnet endophasique</h1><p class="sub">Monologuer · document préparé le ${esc(exported)} · ${items.length} entrée${items.length > 1 ? "s" : ""}</p>${html}</main></body></html>`);
+    const blob = await zip.generateAsync({type:"blob"});
+    const d = new Date();
+    shareFile = new File([blob], `monologuer-carnet-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.zip`, {type:"application/zip"});
+    const parts = [];
+    if (nText) parts.push(`${nText} texte${nText > 1 ? "s" : ""}`);
+    if (nDraw) parts.push(`${nDraw} dessin${nDraw > 1 ? "s" : ""}`);
+    if (nAudio) parts.push(`${nAudio} enregistrement${nAudio > 1 ? "s" : ""}`);
+    $("#shareSummary").textContent = `Document prêt : ${parts.join(", ")} (${blob.size < 1048576 ? Math.max(1, Math.round(blob.size/1024)) + " Ko" : (blob.size/1048576).toFixed(1).replace(".", ",") + " Mo"}).`;
+    $("#shareSend").hidden = !(navigator.canShare && navigator.canShare({files:[shareFile]}));
+    $("#sharePick").hidden = true; $("#shareReady").hidden = false; st.textContent = "";
+  } catch (err) {
+    st.textContent = "Le document n'a pas pu être préparé. Vérifiez votre connexion internet (elle est nécessaire pour cette étape), puis réessayez.";
+  } finally { btn.disabled = false; }
+});
+$("#shareDownload").addEventListener("click", () => {
+  if (!shareFile) return;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(shareFile); a.download = shareFile.name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+});
+$("#shareSend").addEventListener("click", async () => {
+  if (!shareFile) return;
+  try { await navigator.share({files:[shareFile], title:"Carnet Monologuer"}); }
+  catch (err) { if (err.name !== "AbortError") $("#shareStatus").textContent = "Le partage n'a pas fonctionné. Utilisez « Télécharger », puis envoyez le fichier depuis vos fichiers."; }
 });
 
 /* ---------------- Import ---------------- */
